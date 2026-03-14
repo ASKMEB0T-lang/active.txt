@@ -1,8 +1,9 @@
+# rotate.yml (ضعه في .github/workflows/rotate.yml)
 name: Rotate Server
 
 on:
   schedule:
-    - cron: "0 */6 * * *"
+    - cron: "0 */6 * * *"  # كل 6 ساعات
 
 jobs:
   rotate:
@@ -10,11 +11,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Rotate active server
         run: |
           CURRENT=$(cat active.txt)
-
           if [ "$CURRENT" = "server1" ]; then
             echo "server2" > active.txt
           elif [ "$CURRENT" = "server2" ]; then
@@ -25,10 +27,10 @@ jobs:
             echo "server1" > active.txt
           fi
 
-      - name: Commit change
+      - name: Commit and push changes
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "actions@github.com"
           git add active.txt
-          git commit -m "rotate server"
+          git diff --quiet && git diff --staged --quiet || git commit -m "🔄 Rotate server to $(cat active.txt)"
           git push
