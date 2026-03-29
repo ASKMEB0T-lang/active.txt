@@ -7,64 +7,185 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background: var(--tg-theme-bg-color, #ffffff);
-            color: var(--tg-theme-text-color, #000000);
+            font-family: 'Segoe UI', 'Poppins', system-ui, -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+            background: #0a0a0a;  /* أسود عميق */
+            color: #e5e5e5;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             padding: 20px;
+            position: relative;
+            overflow-x: hidden;
         }
+
+        /* خلفية ذهبية خفيفة جداً كتوهج */
+        body::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(212, 175, 55, 0.08) 0%, rgba(0,0,0,0) 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
         .container {
-            max-width: 400px;
+            max-width: 460px;
             width: 100%;
             text-align: center;
+            background: rgba(20, 20, 20, 0.7);
+            backdrop-filter: blur(2px);
+            border-radius: 48px;
+            padding: 32px 24px;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            box-shadow: 0 25px 45px rgba(0,0,0,0.5), 0 0 20px rgba(212, 175, 55, 0.1);
+            position: relative;
+            z-index: 2;
+            transition: all 0.3s ease;
         }
-        .logo { font-size: 64px; margin-bottom: 20px; }
-        h1 { font-size: 24px; margin-bottom: 10px; }
-        p { color: var(--tg-theme-hint-color, #666666); margin-bottom: 30px; font-size: 14px; }
-        .h-captcha { display: flex; justify-content: center; margin-bottom: 20px; }
+
+        .logo {
+            font-size: 72px;
+            margin-bottom: 12px;
+            filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.6));
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #f5e7b2 0%, #d4af37 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            margin-bottom: 12px;
+            letter-spacing: -0.3px;
+        }
+
+        .sub {
+            color: #b0b0b0;
+            margin-bottom: 28px;
+            font-size: 15px;
+            border-left: 2px solid #d4af37;
+            padding-left: 12px;
+            display: inline-block;
+        }
+
+        .h-captcha {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0 20px;
+            transform: scale(0.98);
+        }
+
+        /* تخصيص مظهر hCaptcha إن أمكن (يتم التعامل تلقائياً) */
+        .h-captcha iframe {
+            border-radius: 16px !important;
+            box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.4) !important;
+        }
+
         .status {
-            margin-top: 20px;
-            padding: 12px;
-            border-radius: 10px;
+            margin-top: 24px;
+            padding: 12px 16px;
+            border-radius: 60px;
             font-size: 14px;
+            font-weight: 500;
             display: none;
+            backdrop-filter: blur(4px);
         }
-        .status.success { background: #d4edda; color: #155724; display: block; }
-        .status.error { background: #f8d7da; color: #721c24; display: block; }
-        .status.loading { background: #e2e3e5; color: #383d41; display: block; }
+
+        .status.success {
+            background: rgba(0, 40, 20, 0.8);
+            color: #d4af37;
+            border: 1px solid #d4af37;
+            display: block;
+        }
+        .status.error {
+            background: rgba(80, 20, 20, 0.8);
+            color: #ffaa88;
+            border: 1px solid #ff6644;
+            display: block;
+        }
+        .status.loading {
+            background: rgba(30, 30, 40, 0.8);
+            color: #d4af37;
+            border: 1px solid #d4af37;
+            display: block;
+        }
+
         button {
-            background: var(--tg-theme-button-color, #2481cc);
-            color: var(--tg-theme-button-text-color, #ffffff);
-            border: none;
-            padding: 12px 24px;
-            border-radius: 10px;
+            background: linear-gradient(95deg, #1e1e1e 0%, #2a2a2a 100%);
+            color: #d4af37;
+            border: 1px solid #d4af37;
+            padding: 14px 20px;
+            border-radius: 60px;
             font-size: 16px;
             font-weight: 600;
             width: 100%;
             cursor: pointer;
             margin-top: 20px;
+            transition: all 0.25s ease;
+            letter-spacing: 0.5px;
+            backdrop-filter: blur(4px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
-        button:disabled { opacity: 0.6; cursor: not-allowed; }
-        .footer { margin-top: 30px; font-size: 12px; color: var(--tg-theme-hint-color, #999999); }
+
+        button:hover {
+            background: #d4af37;
+            color: #0a0a0a;
+            border-color: #d4af37;
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.5);
+            transform: scale(1.01);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            background: #2a2a2a;
+            color: #888;
+            border-color: #555;
+        }
+
+        .footer {
+            margin-top: 28px;
+            font-size: 11px;
+            color: #6a6a6a;
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            border-top: 1px solid rgba(212, 175, 55, 0.2);
+            padding-top: 18px;
+        }
+
+        .footer span {
+            color: #d4af37;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="logo">🛡️</div>
-        <h1>Verify You Are Human</h1>
-        <p>Please complete the verification below to continue using the bot.</p>
-        
+        <div class="logo">🛡️✨</div>
+        <h1>Verify Humanity</h1>
+        <div class="sub">Secure access · One-time check</div>
+
         <div class="h-captcha" data-sitekey="a1b657c2-2bde-4a40-80d0-4ee29d8e303a"></div>
-        
-        <button id="verifyBtn" disabled>🔒 Complete Captcha First</button>
-        
+
+        <button id="verifyBtn" disabled>🔒 VERIFY & CONTINUE</button>
+
         <div id="status" class="status"></div>
-        <div class="footer">Powered by hCaptcha | Security check</div>
+        <div class="footer">
+            <span>◆</span> Powered by hCaptcha <span>◆</span> Security check
+        </div>
     </div>
 
     <script>
@@ -79,13 +200,22 @@
         window.onCaptchaSolved = function(token) {
             captchaToken = token;
             verifyBtn.disabled = false;
-            verifyBtn.innerHTML = '✅ Verify & Continue';
+            verifyBtn.innerHTML = '✅ VERIFIED · CONTINUE';
+            verifyBtn.style.background = "#d4af37";
+            verifyBtn.style.color = "#0a0a0a";
+            verifyBtn.style.borderColor = "#d4af37";
         };
         
         window.onCaptchaExpired = function() {
             captchaToken = null;
             verifyBtn.disabled = true;
-            verifyBtn.innerHTML = '🔒 Captcha Expired - Try Again';
+            verifyBtn.innerHTML = '🔒 CAPTCHA EXPIRED · TRY AGAIN';
+            verifyBtn.style.background = "";
+            verifyBtn.style.color = "";
+            showStatus('error', 'Captcha expired. Please try again.');
+            setTimeout(() => {
+                if (statusDiv.classList.contains('error')) statusDiv.style.display = 'none';
+            }, 3000);
         };
         
         verifyBtn.addEventListener('click', function() {
@@ -95,7 +225,7 @@
             }
             
             verifyBtn.disabled = true;
-            verifyBtn.innerHTML = '⏳ Verifying...';
+            verifyBtn.innerHTML = '⏳ VERIFYING...';
             showStatus('loading', 'Verifying your response...');
             
             WebApp.sendData(JSON.stringify({
@@ -109,11 +239,17 @@
         function showStatus(type, message) {
             statusDiv.className = 'status ' + type;
             statusDiv.innerHTML = message;
+            statusDiv.style.display = 'block';
+            if (type !== 'loading') {
+                setTimeout(() => {
+                    if (statusDiv.style.display === 'block') statusDiv.style.display = 'none';
+                }, 4000);
+            }
         }
         
         WebApp.onEvent('themeChanged', function() {
-            document.body.style.backgroundColor = WebApp.themeParams.bg_color;
-            document.body.style.color = WebApp.themeParams.text_color;
+            // نحافظ على التصميم الأسود بغض النظر عن ثيم التلغرام
+            document.body.style.backgroundColor = "#0a0a0a";
         });
     </script>
 </body>
