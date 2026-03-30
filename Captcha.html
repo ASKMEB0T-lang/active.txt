@@ -1,1 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Verify Humanity</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
+        body {
+            background: #000000;
+            font-family: 'Segoe UI', 'Poppins', system-ui, -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 460px;
+            width: 100%;
+            text-align: center;
+            background: #000000;
+            border: 1px solid #D4AF37;
+            border-radius: 32px;
+            padding: 32px 24px;
+            box-shadow: 0 0 30px rgba(212, 175, 55, 0.2);
+        }
+
+        .logo {
+            font-size: 72px;
+            margin-bottom: 16px;
+            filter: drop-shadow(0 0 6px #D4AF37);
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 600;
+            color: #D4AF37;
+            letter-spacing: -0.3px;
+            margin-bottom: 8px;
+        }
+
+        .sub {
+            color: #D4AF37;
+            opacity: 0.8;
+            font-size: 14px;
+            margin-bottom: 28px;
+            border-left: 2px solid #D4AF37;
+            padding-left: 12px;
+            display: inline-block;
+        }
+
+        .h-captcha {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .h-captcha iframe {
+            border-radius: 16px !important;
+            box-shadow: 0 0 0 1px #D4AF37 !important;
+        }
+
+        /* زر احتياطي صغير جداً - غير مرئي تقريباً */
+        .hidden-btn {
+            visibility: hidden;
+            height: 0;
+            width: 0;
+            opacity: 0;
+            pointer-events: none;
+            position: absolute;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 40px;
+            font-size: 13px;
+            font-weight: 500;
+            display: none;
+        }
+
+        .status.success {
+            background: rgba(212, 175, 55, 0.2);
+            color: #D4AF37;
+            border: 1px solid #D4AF37;
+            display: block;
+        }
+
+        .status.error {
+            background: rgba(212, 175, 55, 0.1);
+            color: #D4AF37;
+            border: 1px solid #D4AF37;
+            display: block;
+        }
+
+        .footer {
+            margin-top: 28px;
+            font-size: 11px;
+            color: #D4AF37;
+            opacity: 0.6;
+            border-top: 1px solid rgba(212, 175, 55, 0.3);
+            padding-top: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🛡️</div>
+        <h1>VERIFY HUMANITY</h1>
+        <div class="sub">One‑time security check</div>
+
+        <div class="h-captcha" data-sitekey="a1b657c2-2bde-4a40-80d0-4ee29d8e303a"></div>
+
+        <div id="status" class="status"></div>
+        <div class="footer">◆ POWERED BY hCaptcha ◆</div>
+    </div>
+
+    <!-- زر احتياطي مخفي (في حال فشل الإرسال التلقائي) -->
+    <button id="fallbackBtn" class="hidden-btn"></button>
+
+    <script>
+        const WebApp = window.Telegram.WebApp;
+        WebApp.ready();
+        WebApp.expand();
+        
+        let captchaToken = null;
+        let autoSent = false;
+        const statusDiv = document.getElementById('status');
+        
+        // إرسال البيانات وإغلاق الصفحة
+        function sendAndClose(token) {
+            if (autoSent) return;
+            autoSent = true;
+            
+            WebApp.sendData(JSON.stringify({
+                action: 'captcha_solved',
+                token: token
+            }));
+            
+            showStatus('success', '✓ Verification successful. Returning to bot...');
+            
+            // إغلاق الويب آب بعد نصف ثانية
+            setTimeout(() => {
+                WebApp.close();
+            }, 500);
+        }
+        
+        // عند حل الكابتشا بنجاح
+        window.onCaptchaSolved = function(token) {
+            captchaToken = token;
+            showStatus('success', '✓ Captcha solved! Redirecting...');
+            sendAndClose(token);
+        };
+        
+        // عند انتهاء صلاحية الكابتشا
+        window.onCaptchaExpired = function() {
+            captchaToken = null;
+            showStatus('error', 'Captcha expired. Please refresh the page and try again.');
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 4000);
+        };
+        
+        function showStatus(type, message) {
+            statusDiv.className = 'status ' + type;
+            statusDiv.innerHTML = message;
+            statusDiv.style.display = 'block';
+            if (type !== 'success') {
+                setTimeout(() => {
+                    if (statusDiv.style.display === 'block') statusDiv.style.display = 'none';
+                }, 4000);
+            }
+        }
+        
+        // زر احتياطي في حال الحاجة (نادراً ما يستخدم)
+        const fallbackBtn = document.getElementById('fallbackBtn');
+        fallbackBtn.addEventListener('click', function() {
+            if (captchaToken) sendAndClose(captchaToken);
+        });
+        
+        // إجبار الخلفية على الأسود دائماً
+        WebApp.onEvent('themeChanged', function() {
+            document.body.style.backgroundColor = "#000000";
+        });
+    </script>
+</body>
+</html>
