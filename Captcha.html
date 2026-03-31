@@ -3,101 +3,109 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Human Verification</title>
+    <title>Verify Humanity</title>
+    <!-- Telegram WebApp SDK (ضروري) -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- hCaptcha -->
     <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         body {
-            background: #000;
+            background: #000000;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            font-family: system-ui, sans-serif;
-            margin: 0;
             padding: 20px;
         }
         .container {
-            background: #000;
-            border: 2px solid #D4AF37;
-            border-radius: 28px;
-            padding: 32px 24px;
-            max-width: 400px;
+            max-width: 460px;
+            width: 100%;
             text-align: center;
-            box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+            background: #000000;
+            border: 2px solid #D4AF37;
+            border-radius: 32px;
+            padding: 32px 24px;
+            box-shadow: 0 0 30px rgba(212, 175, 55, 0.3);
         }
         h1 {
             color: #D4AF37;
             font-size: 28px;
             margin-bottom: 8px;
+            letter-spacing: -0.5px;
         }
         .sub {
             color: #D4AF37;
             opacity: 0.8;
-            margin-bottom: 24px;
+            font-size: 14px;
+            margin-bottom: 28px;
+            border-left: 2px solid #D4AF37;
+            padding-left: 12px;
+            display: inline-block;
         }
         .h-captcha {
             display: flex;
             justify-content: center;
             margin: 20px 0;
         }
-        .status {
-            margin-top: 20px;
-            font-size: 14px;
-            color: #D4AF37;
-            background: rgba(212, 175, 55, 0.1);
-            padding: 8px;
-            border-radius: 40px;
-            display: none;
+        .h-captcha iframe {
+            border-radius: 16px;
+            box-shadow: 0 0 0 1px #D4AF37;
         }
         .footer {
-            margin-top: 24px;
+            margin-top: 28px;
             font-size: 11px;
             color: #D4AF37;
             opacity: 0.6;
+            border-top: 1px solid rgba(212, 175, 55, 0.3);
+            padding-top: 16px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🛡️ VERIFY</h1>
-        <div class="sub">Complete the captcha</div>
-        <div class="h-captcha" data-sitekey="a1b657c2-2bde-4a40-80d0-4ee29d8e303a"></div>
-        <div id="status" class="status"></div>
-        <div class="footer">◆ hCaptcha ◆</div>
+        <div class="sub">Complete the captcha to continue</div>
+        <div class="h-captcha"
+             data-sitekey="a1b657c2-2bde-4a40-80d0-4ee29d8e303a"
+             data-callback="captchaSolved"
+             data-expired-callback="captchaExpired">
+        </div>
+        <div class="footer">◆ Powered by hCaptcha ◆</div>
     </div>
+
     <script>
-        const WebApp = window.Telegram.WebApp;
-        WebApp.ready();
-        WebApp.expand();
-        
-        let solved = false;
-        const statusDiv = document.getElementById('status');
-        
-        window.onCaptchaSolved = function(token) {
-            if (solved) return;
-            solved = true;
-            statusDiv.style.display = 'block';
-            statusDiv.innerText = '✓ Verified! Returning to bot...';
-            // إرسال البيانات إلى البوت
-            WebApp.sendData(JSON.stringify({
-                action: 'captcha_solved',
+        // تهيئة Telegram WebApp
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();  // تمديد الصفحة لملء الشاشة
+
+        // هذه الدالة تُستدعى تلقائياً بعد حل الكابتشا بنجاح
+        window.captchaSolved = function(token) {
+            console.log("Captcha solved, token:", token);
+            // إنشاء البيانات التي ينتظرها البوت
+            const payload = {
+                action: "captcha_solved",
                 token: token
-            }));
-            // إغلاق النافذة بعد نصف ثانية
-            setTimeout(() => WebApp.close(), 500);
+            };
+            // إرسال البيانات إلى البوت
+            tg.sendData(JSON.stringify(payload));
+            // إغلاق النافذة بعد نصف ثانية لضمان الإرسال
+            setTimeout(() => {
+                tg.close();
+            }, 500);
         };
-        
-        window.onCaptchaExpired = function() {
-            statusDiv.style.display = 'block';
-            statusDiv.innerText = '❌ Captcha expired. Refresh page.';
-            solved = false;
+
+        // في حال انتهاء صلاحية الكابتشا (اختياري)
+        window.captchaExpired = function() {
+            console.log("Captcha expired");
+            // يمكن إعادة تعيين الحالة هنا إذا أردت
         };
-        
-        // إجبار الخلفية السوداء
-        WebApp.onEvent('themeChanged', function() {
-            document.body.style.backgroundColor = "#000000";
-        });
     </script>
 </body>
 </html>
