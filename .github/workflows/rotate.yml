@@ -1,0 +1,38 @@
+# .github/workflows/rotate.yml
+name: Rotate Server
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"  # كل 6 ساعات
+  workflow_dispatch: # للسماح بالتشغيل اليدوي
+
+permissions:
+  contents: write  # صلاحية الكتابة على المستودع
+
+jobs:
+  rotate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Rotate active server
+        run: |
+          CURRENT=$(cat active.txt)
+          if [ "$CURRENT" = "server1" ]; then
+            echo "server2" > active.txt
+          elif [ "$CURRENT" = "server2" ]; then
+            echo "server3" > active.txt
+          elif [ "$CURRENT" = "server3" ]; then
+            echo "server4" > active.txt
+          else
+            echo "server1" > active.txt
+          fi
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add active.txt
+          git diff --quiet && git diff --staged --quiet || git commit -m "🔄 Rotate server to $(cat active.txt)"
+          git push
